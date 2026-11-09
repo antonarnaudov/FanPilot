@@ -2,6 +2,11 @@
 
 All notable changes to FanPilot. Versions follow [semantic versioning](https://semver.org); 0.x releases may still change settings formats (old settings are migrated).
 
+## Unreleased
+
+### Changed
+- Releases are built and published by GitHub Actions from the version tag, with build provenance attestations (`gh attestation verify`) next to the SHA-256 checksums.
+
 ## 0.2.4 — 2026-11-09
 
 ### Fixed

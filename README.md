@@ -42,7 +42,7 @@ Requires an Apple Silicon Mac with **macOS 26 or later**.
    ```
 3. Allow the fan helper. It's built into the app; there is no separate installer. FanPilot registers it with macOS (Apple's `SMAppService`) and macOS asks you once: click **Open Login Items…** in FanPilot and turn FanPilot on under *Allow in the Background*.
 
-Pick a profile from the fan icon in the menu bar. Deleting FanPilot removes the helper with it. Each release lists SHA-256 checksums in `SHA256SUMS.txt`.
+Pick a profile from the fan icon in the menu bar. Deleting FanPilot removes the helper with it. Every release is built by GitHub Actions from its tag, with SHA-256 checksums in `SHA256SUMS.txt` and [build provenance](https://docs.github.com/en/actions/concepts/security/artifact-attestations) you can check with `gh attestation verify FanPilot-x.y.z.dmg --repo antonarnaudov/FanPilot`.
 
 ## Build from source
 
@@ -131,6 +131,8 @@ FANPILOT_PAGE=sensors FANPILOT_APPEARANCE=light open build/FanPilot.app   # open
 | `Sources/fanpilotctl` | Command-line tool |
 | `Sources/FanPilotApp` | SwiftUI menu bar app |
 | `Resources/com.antonarnaudov.fanpilot.helper.plist` | The helper's launchd definition, embedded in the app and registered with SMAppService |
+
+Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). Pull requests are built and tested by CI, and each run has a test build of the app to download. Releases: [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Credits
 

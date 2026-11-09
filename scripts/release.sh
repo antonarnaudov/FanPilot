@@ -9,9 +9,11 @@
 #   NOTARY_PROFILE=<notarytool keychain profile> scripts/release.sh
 # the app and the disk image are notarized and stapled, so they open without
 # Gatekeeper warnings. (Create the profile once with
-# `xcrun notarytool store-credentials`.)
+# `xcrun notarytool store-credentials`; NOTARY_KEYCHAIN names the keychain
+# holding it when it isn't the default one.)
 #
-# Publishing the files (gh release create) is a separate, deliberate step.
+# Publishing is done by .github/workflows/release.yml when a version tag is
+# pushed (see docs/RELEASING.md); this script only builds the files.
 set -eu
 cd "$(dirname "$0")/.."
 
@@ -30,7 +32,11 @@ rm -rf "$OUT" "$STAGE"
 mkdir -p "$OUT" "$STAGE"
 
 notarize() { # <file>
-    xcrun notarytool submit "$1" --keychain-profile "$NOTARY_PROFILE" --wait
+    if [ -n "${NOTARY_KEYCHAIN:-}" ]; then
+        xcrun notarytool submit "$1" --keychain-profile "$NOTARY_PROFILE" --keychain "$NOTARY_KEYCHAIN" --wait
+    else
+        xcrun notarytool submit "$1" --keychain-profile "$NOTARY_PROFILE" --wait
+    fi
 }
 
 if [ -n "${NOTARY_PROFILE:-}" ]; then

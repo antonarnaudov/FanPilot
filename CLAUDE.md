@@ -15,10 +15,13 @@ All checked against the Makefile:
 - `make screenshots`: render every screen offscreen to `build/snapshots` (`FANPILOT_SNAPSHOT=<dir>`). Layout only: Liquid Glass doesn't render offscreen.
 - Design review in a live window: `open --env FANPILOT_PAGE=overview|sensors|helper|menu|profile:<name> --env FANPILOT_APPEARANCE=light|dark --env FANPILOT_SCROLL=bottom build/FanPilot.app`. README screenshots are captures of the live window (`docs/screenshots/*.jpg`).
 - `make icon`: regenerate `Resources/AppIcon.icns`
-- `make release`: `scripts/release.sh` → `build/release/FanPilot-<version>.dmg`, `.zip`, `SHA256SUMS.txt` (notarized when `NOTARY_PROFILE` and a Developer ID exist). Publishing: tag `v<version>` and `gh release create v<version> build/release/* --notes-file …`, only with the maintainer's yes. Update CHANGELOG.md and VERSION first.
+- `make release`: `scripts/release.sh` → `build/release/FanPilot-<version>.dmg`, `.zip`, `SHA256SUMS.txt` (notarized when `NOTARY_PROFILE` and a Developer ID exist). `scripts/release-notes.sh [version]` prints the release notes from CHANGELOG.md.
+- Lint (CI runs both): `actionlint` for `.github/workflows`, `shellcheck scripts/*.sh`.
 
 ## How changes land
-- Base branch `main`. One task = one branch (`feat/…`, `fix/…`) = one worktree. PRs into `main` once the repo is on GitHub.
+- Base branch `main`. One task = one branch (`feat/…`, `fix/…`) = one worktree = one pull request into `main`.
+- CI (`.github/workflows/ci.yml`) runs on every pull request and push to `main`: actionlint, ShellCheck, `swift build --build-tests -Xswiftc -warnings-as-errors`, `swift test`, `scripts/build-app.sh`, and uploads the app as a test build. Actions are pinned by commit SHA (Dependabot updates them monthly); keep new ones pinned the same way.
+- User-visible changes add a line under `## Unreleased` in CHANGELOG.md.
 - The app's version is the `VERSION` file. `FanPilot.version` in `Sources/FanPilotCore/Constants.swift` is the helper's: bump it only when the helper or the XPC protocol changes (that changes the helper binary, which users may have to approve again).
 
 ## Parallel work
@@ -38,10 +41,10 @@ Several agents may work on this repo at once.
 5. Anything that writes to the SMC (`FanController`, `SMC.write`): only a person at the Mac can verify, with `sudo fanpilotctl test`. Say so in the hand-back; never claim it works on hardware without that run.
 
 ## Deploys and outward actions
-Nothing deploys automatically. Pushing to GitHub (the repo is public), creating releases, tags that publish builds, and posting about the project happen **only with the maintainer's explicit yes, per action**. Agents prepare everything and ask.
+Pushing a tag `v<version>` publishes a release: `.github/workflows/release.yml` tests, builds, attests and creates the GitHub release with notes from CHANGELOG.md (steps in `docs/RELEASING.md`). A manual run of that workflow is a dry run that publishes nothing. Pushing to GitHub (the repo is public), pushing tags, and posting about the project happen **only with the maintainer's explicit yes, per action**. Agents prepare everything and ask.
 
 ## Secrets
-None in the repo. A Developer ID signing identity stays in the maintainer's keychain and is passed by name as `SIGN_IDENTITY`. Never commit certificates or notarization credentials.
+None in the repo. Locally a Developer ID signing identity stays in the maintainer's keychain (`SIGN_IDENTITY` by name). In CI, signing and notarization use repository secrets (names in `docs/RELEASING.md`), which only the maintainer sets. Never commit certificates or notarization credentials.
 
 ## Gotchas
 - **`Ftst` is held while FanPilot owns any fan** (macOS reclaims manual fans otherwise) **and cleared as soon as it owns none. Never leave it at 1.** It keeps macOS's thermal manager from running the fans. Every path that takes fans must give them back (`FanController.release` / `releaseAll`). Recovery: `sudo fanpilotctl auto` or a reboot.
@@ -63,5 +66,6 @@ None in the repo. A Developer ID signing identity stays in the maintainer's keyc
 
 ## Docs map
 - `README.md`: what it is, install, usage, how it works, credits
-- `CHANGELOG.md`: what changed per release; `CONTRIBUTING.md`, `SECURITY.md`
+- `CHANGELOG.md`: what changed per release; `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`
+- `docs/RELEASING.md`: versions, cutting a release, signing secrets; `.github/workflows/`: CI and release
 - `Resources/com.antonarnaudov.fanpilot.helper.plist`: the helper launchd definition embedded in the app; `Sources/FanPilotApp/HelperService.swift`: registration

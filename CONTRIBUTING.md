@@ -31,9 +31,12 @@ make install   # copy to /Applications and open
 
 ## Pull requests
 
-- One change per pull request, with a short description of what and why.
-- `swift build` without warnings and `make test` green. CI runs both.
+- One change per pull request, with a short description of what and why. The pull request template has the checklist.
+- `swift build` without warnings and `make test` green. CI runs both (warnings fail the build), lints the workflows and shell scripts, and attaches a test build of the app to each run: download it from the run's **Summary** page to try a change without building it.
+- User-visible changes get a line under **Unreleased** in `CHANGELOG.md`; the release notes are made from it.
 - Anything that writes to the SMC (`FanController`, `SMC.write`) must keep the rule: **the fans always go back to macOS** when FanPilot stops owning them, and `Ftst` is never left at 1. Say how you tested it on real hardware.
 - UI follows Apple's current design (Liquid Glass); prefer system components.
 
-By contributing you agree that your contribution is licensed under the [MIT License](LICENSE).
+Releases are cut by the maintainer: see [docs/RELEASING.md](docs/RELEASING.md).
+
+Please follow the [code of conduct](CODE_OF_CONDUCT.md). By contributing you agree that your contribution is licensed under the [MIT License](LICENSE).

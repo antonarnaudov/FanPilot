@@ -1,22 +1,79 @@
+# Every pull request and every push to main: lint, build without warnings,
+# run the tests and attach a test build of the app (ad-hoc signed) to the run.
 name: CI
 
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push to a pull request cancels its older runs; runs on main all finish.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
-  build:
-    runs-on: macos-26
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Workflows (actionlint)
+        uses: docker://rhysd/actionlint:1.7.12
+        with:
+          args: -color
+
+      - name: Shell scripts (ShellCheck)
+        run: shellcheck scripts/*.sh
+
+  build:
+    name: Build and test
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
       - name: Toolchain
         run: |
           xcodebuild -version
           swift --version
-      - name: Build
-        run: swift build
+
+      - name: Build (warnings are errors)
+        run: swift build --build-tests -Xswiftc -warnings-as-errors
+
       - name: Test
-        run: swift test
+        run: swift test --skip-build
+
       - name: App bundle
         run: scripts/build-app.sh
+
+      - name: Package the test build
+        env:
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          ZIP="build/FanPilot-$VERSION-${SHA::7}.zip"
+          ditto -c -k --sequesterRsrc --keepParent build/FanPilot.app "$ZIP"
+          echo "ZIP=$ZIP" >> "$GITHUB_ENV"
+
+      - name: Upload the test build
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          path: ${{ env.ZIP }}
+          archive: false
+          retention-days: 14
+          if-no-files-found: error
