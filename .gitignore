@@ -1,0 +1,11 @@
+.build/
+build/
+.swiftpm/
+*.xcodeproj/
+xcuserdata/
+DerivedData/
+.DS_Store
+
+# Maintainer-only notes and status: never published
+CLAUDE.local.md
+docs/STATUS.md

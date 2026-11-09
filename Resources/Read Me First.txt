@@ -1,0 +1,22 @@
+FanPilot: fine-grained fan control for Apple Silicon Macs (macOS 26 or later)
+
+1. Drag FanPilot onto the Applications folder.
+
+2. Open FanPilot from Applications.
+   FanPilot isn't notarized by Apple yet, so the first time macOS says it
+   can't check it. Click Done, then:
+   System Settings > Privacy & Security > scroll down to "FanPilot was
+   blocked" > Open Anyway > confirm with your password.
+   (Or, in Terminal:  xattr -dr com.apple.quarantine /Applications/FanPilot.app )
+
+3. Allow the fan helper.
+   FanPilot changes fan speed through a small helper that's built into the
+   app. macOS asks you once to allow it: click "Open Login Items…" in
+   FanPilot and turn FanPilot on under "Allow in the Background".
+
+That's it. Pick a profile from the fan icon in the menu bar.
+
+Undo: choose the macOS profile, or turn the helper off in FanPilot > Helper,
+then move FanPilot to the Bin. The fans go back to macOS.
+
+Source code, help and issues: https://github.com/antonarnaudov/FanPilot
